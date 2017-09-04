@@ -5,9 +5,15 @@ var cheerio = require("cheerio");
 // Makes HTTP request for HTML page
 var request = require("request");
 
+var Article = require('../models/article');
+
 
 router.get('/', function(req, res){
-	res.send('root');
+	res.render('index', {articles: 'data'});
+});
+
+router.get('/articles', function(req, res){
+	res.render('articles', {articles: 'data'});
 });
 
 router.get('/scrape', function(req, res){
@@ -20,17 +26,26 @@ router.get('/scrape', function(req, res){
   		var results = [];
 
   		$('a.story-link').each(function(i, element){
-  			var link = $(element).attr('href').trim();
+  			
   			var title = $(element).find('h2.headline').text().trim();
+  			var link = $(element).attr('href').trim();
   			var summary = $(element).find('p.summary').text().trim(); 
 
-  			results.push({
-  				title: title,
-  				link: link,
-  				summary: summary
-  			});
+  			Article.findOne({'title': title}, '_id', function(error, result){
+  				 if(!result){
+  				 	console.log('result');
+  					var newArticle = new Article({
+		  				title: title,
+		  				link: link,
+		  				summary: summary
+		  			});
+
+		  			newArticle.save(function(error){
+		  				if(error) console.log('Error saving article:', error);
+		  			});
+  				 }
+  			});		
   		});
-  		console.log(results);
 	});
 });
 

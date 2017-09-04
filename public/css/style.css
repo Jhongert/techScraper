@@ -1,0 +1,9 @@
+body {
+	background-color: white;
+}
+
+.navbar {
+	border-radius: 0;
+	padding-top: 10px;
+    padding-bottom: 10px;
+}
