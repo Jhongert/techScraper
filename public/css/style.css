@@ -7,3 +7,29 @@ body {
 	padding-top: 10px;
     padding-bottom: 10px;
 }
+
+.container {
+	max-width: 960px;
+}
+
+.panel {
+	    box-shadow: 4px 4px 10px lightslategrey;
+}
+
+.panel-heading {
+	position: relative;
+}
+
+.btn-add-note {
+	float: right;
+}
+
+.btn-delete-note {
+	float: right;
+	margin-left: 10px;
+	padding: 2px 8px;
+}
+
+textarea {
+	width: 100%;
+}

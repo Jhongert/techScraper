@@ -6,17 +6,9 @@ var cheerio = require("cheerio");
 var request = require("request");
 
 var Article = require('../models/article');
+var Note = require('../models/note');
 
-
-router.get('/', function(req, res){
-	res.render('index', {articles: 'data'});
-});
-
-router.get('/articles', function(req, res){
-	res.render('articles', {articles: 'data'});
-});
-
-router.get('/scrape', function(req, res){
+function scraper(callBack){
 	var site = 'https://www.nytimes.com/section/technology';
 	request(site, function(error, res, html){
 		// Load the HTML into cheerio and save it to a variable
@@ -31,34 +23,59 @@ router.get('/scrape', function(req, res){
   			var link = $(element).attr('href').trim();
   			var summary = $(element).find('p.summary').text().trim(); 
 
-  			Article.findOne({'title': title}, '_id', function(error, result){
-  				 if(!result){
-  				 	console.log('result');
-  					var newArticle = new Article({
-		  				title: title,
-		  				link: link,
-		  				summary: summary
-		  			});
+			var newArticle = new Article({
+				title: title,
+				link: link,
+				summary: summary
+			});
 
-		  			newArticle.save(function(error){
-		  				if(error) console.log('Error saving article:', error);
-		  			});
-  				 }
-  			});		
+			newArticle.save(function(error){
+				//if(error) console.log('Error saving article:', error);
+			});		
   		});
+
+  		callBack();
+	});
+}
+
+router.get('/', function(req, res){
+	Article.find().sort({"dateAdded": -1}).exec( function(err, data){
+		if(err) throw 'Error getting articles';
+
+		res.render('index', {articles: data});
 	});
 });
 
-router.get('/note/:id', function(req, res){
-	res.send('get note');
+router.get('/scrape', function(req, res){
+	scraper(function(){
+		res.redirect('/');
+	});
 });
 
-router.post('/note/:id', function(req, res){
-	res.send('post note id');
+//get notes by article id
+router.get('/api/note/:articleId', function(req, res){
+	Note.find({articleId: req.params.articleId}, function(err, data){
+		res.json(data);
+	});
 });
 
-router.post('note/delete/:id', function(req, res){
-	res.send('delete note');
+router.post('/note', function(req, res){
+
+	var newNote = Note(req.body);
+
+	newNote.save(function(err, data){
+		if(err) res.send(err);
+		if(data) res.json(data);
+	});
+	
+});
+
+router.post('/note/delete/:id', function(req, res){
+	Note.remove({_id: req.params.id}, function(err){
+		if(!err){
+			res.json({status: 'ok'});
+		}
+	})
 });
 
 module.exports = router;
