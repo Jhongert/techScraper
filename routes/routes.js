@@ -5,6 +5,8 @@ var cheerio = require("cheerio");
 // Makes HTTP request for HTML page
 var request = require("request");
 
+var db = require('../config/connection');
+
 var Article = require('../models/article');
 var Note = require('../models/note');
 
@@ -38,6 +40,7 @@ function scraper(callBack){
 	});
 }
 
+// Get all articles
 router.get('/', function(req, res){
 	Article.find().sort({"dateAdded": -1}).exec( function(err, data){
 		if(err) throw 'Error getting articles';
@@ -53,27 +56,48 @@ router.get('/scrape', function(req, res){
 });
 
 //get notes by article id
-router.get('/api/note/:articleId', function(req, res){
-	Note.find({articleId: req.params.articleId}, function(err, data){
-		res.json(data);
+router.get('/api/article/:id', function(req, res){
+	Article.findOne({_id: req.params.id})
+	.populate('note')
+	.exec(function(err, data){
+		if(err){
+			console.log(err)
+		} else {
+			res.json(data);
+		}
 	});
 });
 
-router.post('/note', function(req, res){
+router.post('/note/:id', function(req, res){
 
 	var newNote = Note(req.body);
 
-	newNote.save(function(err, data){
-		if(err) res.send(err);
-		if(data) res.json(data);
+	newNote.save(function(err, noteDoc){
+		if(err){
+			console.log(err);
+		} else {
+			Article.findOneAndUpdate({'_id':req.params.id}, {$push: {'note': noteDoc._id}}, {new: true})
+			.exec(function(err, articleDoc){
+				if(err){
+					console.log(err);
+				} else {
+					res.json(noteDoc);
+				}
+			});
+		}
+		
 	});
 	
 });
 
 router.post('/note/delete/:id', function(req, res){
-	Note.remove({_id: req.params.id}, function(err){
+	Note.findOneAndRemove({_id: req.params.id}, function(err, deletedNote){
 		if(!err){
-			res.json({status: 'ok'});
+			console.log(deletedNote.articleId);
+
+			Article.findOneAndUpdate({_id: deletedNote.articleId}, { $pull: {'note': deletedNote._id}}, function(err){
+				if (!err) res.json({status: 'ok'});
+			});
 		}
 	})
 });

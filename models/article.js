@@ -1,7 +1,5 @@
 var mongoose = require('mongoose');
 
-var db = require('../config/connection');
-
 var Schema = mongoose.Schema;
 
 var ArticleSchema = new Schema({
@@ -18,7 +16,11 @@ var ArticleSchema = new Schema({
 		type: Date, 
 		default: Date.now
 	},
-    summary: String
+    summary: String,
+    note: [{
+    	type: Schema.Types.ObjectId,
+    	ref: 'Note'
+    }]
 });
 
 var Article = mongoose.model('Article', ArticleSchema);

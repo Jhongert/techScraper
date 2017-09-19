@@ -1,11 +1,9 @@
 var mongoose = require('mongoose');
 
-var db = require('../config/connection');
-
 var Schema = mongoose.Schema;
 
 var NoteSchema = new Schema({
-	content: String,
+	note: String,
 	articleId: Schema.Types.ObjectId
 });
 

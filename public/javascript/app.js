@@ -3,27 +3,31 @@ $(document).ready(function(){
 	$(document).on('click', '.btn-add-note', addNote);
 	$(document).on('click', '.btn-delete-note', deleteNote);
 
+	var curCounter;
+
 	$('#btn-save-note').on('click', function(){
 		$('.text-danger').remove();
 
+		var articleId = $(this).data('article-id');
+
 		var $textarea = $('textarea');
 
-		var content = $textarea.val().trim();
+		var note = $textarea.val().trim();
 
+		data = {
+			note: note,
+			articleId: articleId
+		}
 		if(note.length == 0){
 			var $p = $('<label class="text-danger">').text('Enter a note');
 			$textarea.after($p);
 		} else {
-			var data = {
-				content: content,
-				articleId: $(this).data('article-id')
-			}
-
-			$.post('/note', data, function(data){
+			$.post('/note/' + articleId, data, function(data){
 				if(data){
 					var dataArray = [];
 					dataArray.push(data);
 					createList(dataArray);
+					updateCount(1);
 				}
 			});
 
@@ -32,14 +36,22 @@ $(document).ready(function(){
 		}
 	});
 
+	function updateCount(count){
+		var counter = parseInt(curCounter.text()) + count;
+		curCounter.text(counter);
+	}
+
 	function addNote(){
-		var articleId = $(this).parents('.panel').data('article-id');
+		curCounter = $(this).parent().prev();
+
+		var articleId = $(this).data('article-id');
+
 		$('#btn-save-note').data('article-id', articleId);
 		$('textarea').val('');
 
-		$.get('api/note/' + articleId, function(data){
-			if(data.length){
-				createList(data);
+		$.get('api/article/' + articleId, function(data){
+			if(data){
+				createList(data.note);
 			}
 		});
 
@@ -48,10 +60,12 @@ $(document).ready(function(){
 
 	function deleteNote(){
 		var noteId = $(this).parent().data('note-id');
+
 		var $li = $(this).parent().remove();
 		$.post('/note/delete/' + noteId, function(data){
 			if(data.status == 'ok'){
 				$li.remove();
+				updateCount(-1);
 			}
 		})
 	}
@@ -61,7 +75,7 @@ $(document).ready(function(){
 			var $li = $('<li class="list-group-item">');
 			var $button = $('<button class="btn btn-danger btn-delete-note">').text('x');
 			$li.append($button);
-			$li.append(data[i].content);
+			$li.append(data[i].note);
 			$li.data('note-id', data[i]._id);
 			$('#note-container').append($li);
 		}
