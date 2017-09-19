@@ -6,7 +6,7 @@ Users are able to leave notes on the articles displayed and revisit them later. 
 ## Built With
 express, express-handlebars, mongoose, body-parser, cheerio, request
 
-## [View demo] (https://stark-scrubland-82118.herokuapp.com/)
+## [View demo](https://stark-scrubland-82118.herokuapp.com/)
 
 ## Author
 - Jhongert Fuertes
